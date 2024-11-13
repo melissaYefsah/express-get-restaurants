@@ -2,12 +2,18 @@ const express = require("express");
 const { Router } = require("express");
 const app = require('../src/app');
 const restaurantRouter = Router();
+const {Menu,Item,Restaurant} = require ("../models/index")
 const db = require('../models/Restaurant')
-const Restaurant = require("../models/index")
+const {check,validationResult} = require('express-validator')
 
 
 restaurantRouter.get('/',async (req,res)=>{
-    const restaurants = await Restaurant.findAll();
+    const restaurants = await Restaurant.findAll({
+    include: [{
+        model: Menu,
+        include: [{ model: Item }]
+    }]
+});
     res.json(restaurants);
 })
 restaurantRouter.get('/:id',async (req,res)=>{
@@ -15,9 +21,16 @@ restaurantRouter.get('/:id',async (req,res)=>{
     const restaurant = await Restaurant.findByPk(parameter);
     res.json(restaurant);
 })
-restaurantRouter.post('/',async(req,res)=>{
-    const restaurant = await Restaurant.create(req.body);
-    res.json(restaurant);
+restaurantRouter.post('/',[check("name").not().isEmpty().trim()],[check("location").not().isEmpty().trim()],[check("cuisine").not().isEmpty().trim()], async(req,res)=>{
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        res.json({error: errors.array()})
+    }
+    else {
+        const restaurant = await Restaurant.create(req.body);
+        res.json(restaurant);
+    }
+
 })
 restaurantRouter.put('/:id',async(req,res)=>{
     const updatedRestaurant = await Restaurant.update(req.body,{where :{id : req.params.id}});
