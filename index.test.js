@@ -68,5 +68,11 @@ beforeAll(async() =>{
         expect(restaurants.length).toEqual(restQuantity);
         expect(restaurants[0].id).not.toEqual(1)
     });
+    test("should throw an error when the name with less than 10 characters, or more than 30" , async()=>{
+        const response = await request(app)
+        .post('/restaurants')
+        .send({name : 'qwe',location:'NY',cuisine:'zxc'})
+        expect(response.body.error).toBeDefined();
+    });
 
 
